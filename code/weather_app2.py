@@ -1,10 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
-## TEST
-def scrape_weather_data(city):
+
+def scrape_weather_data(location):
     # URL of the weather website
-    # url = f"https://www.wunderground.com/weather/us/oh/youngstown{44512}"
-    url = f"https://www.wunderground.com/weather/us/oh/youngstown/44512"
+    url = f"https://www.wunderground.com/weather/{location}"
 
     # Send an HTTP GET request to the URL
     response = requests.get(url)
@@ -21,11 +20,11 @@ def scrape_weather_data(city):
             temperature = current_weather.find('span', class_='CurrentConditions--tempValue--1RYJJ').text
             condition = current_weather.find('div', class_='CurrentConditions--phraseValue--2xXSr').text
 
-            print(f"Current Weather in {44512}:")
+            print(f"Current Weather in {location}:")
             print(f"Temperature: {temperature}")
             print(f"Condition: {condition}\n")
         else:
-            print(f"Current weather data not found for {44512}.")
+            print(f"Current weather data not found for {location}.")
 
         # Extract the 10-day forecast
         forecast = soup.find('div', class_='DailyForecast--DisclosureList--ZQ2qA')
@@ -38,10 +37,10 @@ def scrape_weather_data(city):
             for day, condition in zip(days, conditions):
                 print(f"{day.text}: {condition.text}")
         else:
-            print(f"10-day forecast data not found for {44512}.")
+            print(f"10-day forecast data not found for {location}.")
     else:
-        print(f"Failed to retrieve data for {44512}.")
+        print(f"Failed to retrieve data for {location}.")
 
 if __name__ == "__main__":
-    city_name = input("Enter the city name: ")
-    scrape_weather_data(city_name)
+    location = input("Enter the city name or ZIP code: ")
+    scrape_weather_data(location)
