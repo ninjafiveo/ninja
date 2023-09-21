@@ -1,47 +1,62 @@
 import requests
 from bs4 import BeautifulSoup
-## TEST
-def scrape_weather_data(city):
-    # URL of the weather website
-    # url = f"https://www.wunderground.com/weather/us/oh/youngstown{44512}"
-    url = f"https://www.wunderground.com/weather/us/oh/youngstown/44512"
+import json
 
-    # Send an HTTP GET request to the URL
-    response = requests.get(url)
+def scrape_weather_data(location):
+  """Scrapes the current weather data and the ten day forecast for a given location.
 
-    # Check if the request was successful
-    if response.status_code == 200:
-        # Parse the HTML content of the page
-        soup = BeautifulSoup(response.text, 'html.parser')
+  Args:
+    location: The location to scrape the weather data for.
 
-        # Extract the current weather conditions
-        current_weather = soup.find('div', class_='CurrentConditions--currentWeather--3_6KQ')
-        
-        if current_weather:
-            temperature = current_weather.find('span', class_='CurrentConditions--tempValue--1RYJJ').text
-            condition = current_weather.find('div', class_='CurrentConditions--phraseValue--2xXSr').text
+  Returns:
+    A dictionary of weather data, including the current weather and the ten day forecast.
+  """
 
-            print(f"Current Weather in {44512}:")
-            print(f"Temperature: {temperature}")
-            print(f"Condition: {condition}\n")
-        else:
-            print(f"Current weather data not found for {44512}.")
+  # Make an HTTP request to the weather website.
+  response = requests.get(f"https://weather.com/en-US/weather/today/l/{location}")
 
-        # Extract the 10-day forecast
-        forecast = soup.find('div', class_='DailyForecast--DisclosureList--ZQ2qA')
-        
-        if forecast:
-            days = forecast.find_all('div', class_='DailyContent--daypartDate--3MM0J')
-            conditions = forecast.find_all('span', class_='DailyContent--narrative--3AcXd')
+  # Parse the HTML response.
+  soup = BeautifulSoup(response.content, "html.parser")
 
-            print("10-Day Forecast:")
-            for day, condition in zip(days, conditions):
-                print(f"{day.text}: {condition.text}")
-        else:
-            print(f"10-day forecast data not found for {44512}.")
-    else:
-        print(f"Failed to retrieve data for {44512}.")
+  # Extract the current weather data.
+  current_weather = {}
+  current_weather["temperature"] = soup.find("span", class_="CurrentConditions--tempValue--3KcTQ").text
+  current_weather["conditions"] = soup.find("div", class_="CurrentConditions--phraseValue--2Z18W").text
+
+  # Extract the ten day forecast data.
+  ten_day_forecast = []
+  for day in soup.find_all("div", class_="DailyForecast--card--3a4XU"):
+    forecast_day = {}
+    forecast_day["date"] = day.find("h3", class_="DailyForecast--date--1YVbc").text
+    forecast_day["high_temperature"] = day.find("span", class_="DailyForecast--highTempValue--2q0TW").text
+    forecast_day["low_temperature"] = day.find("span", class_="DailyForecast--lowTempValue--144vQ").text
+    forecast_day["conditions"] = day.find("div", class_="DailyForecast--conditionsValue--2Z18W").text
+    ten_day_forecast.append(forecast_day)
+
+  # Return a dictionary of weather data, including the current weather and the ten day forecast.
+  return {
+    "current_weather": current_weather,
+    "ten_day_forecast": ten_day_forecast
+  }
+
+def main():
+  """Scrapes the weather data for the specified location and prints the results."""
+
+  # Get the location from the user.
+  location = input("Enter a location: ")
+
+  # Scrape the weather data.
+  weather_data = scrape_weather_data(location)
+
+  # Print the current weather data.
+  print("Current weather for {}:".format(location))
+  print("Temperature:", weather_data["current_weather"]["temperature"])
+  print("Conditions:", weather_data["current_weather"]["conditions"])
+
+  # Print the ten day forecast data.
+  print("Ten day forecast for {}:".format(location))
+  for day in weather_data["ten_day_forecast"]:
+    print(day["date"], day["high_temperature"], day["low_temperature"], day["conditions"])
 
 if __name__ == "__main__":
-    city_name = input("Enter the city name: ")
-    scrape_weather_data(city_name)
+  main()
